@@ -1,0 +1,34 @@
+FROM ubuntu
+
+ENV TZ=America/Bogota
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \ 
+      apt-get update && \ 
+      apt-get install apache2 -y && \
+      apt-get install openssl -y && \ 
+      apt-get install php -y && \ 
+      apt-get install php-cli -y&& \ 
+      apt-get install php-common -y && \ 
+      apt-get install sudo -y
+
+RUN echo "<?php phpinfo(); ?>" > /var/www/html/hola.php
+
+COPY index.html /var/www/html/
+
+COPY mykey.key /etc/ssl/private/mykey.key
+
+COPY mycert.crt  /etc/ssl/certs/mycert.crt
+
+COPY ssl-params.conf /etc/apache2/conf-available/ssl-params.conf
+
+COPY ssl.conf /etc/apache2/sites-available/default-ssl.conf
+
+EXPOSE 443
+
+RUN sudo a2enmod ssl
+RUN a2enmod headers
+RUN a2ensite default-ssl
+RUN sudo a2enconf ssl-params
+
+
+CMD apachectl -DFOREGROUND
